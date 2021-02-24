@@ -19,7 +19,7 @@ class Economy(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Economy online')
+        print('Economy online dfadsfadsf')
 
     @commands.command()
     async def economy_test(self, ctx):
@@ -51,10 +51,12 @@ class Economy(commands.Cog):
             points = row2['points']
             # user_name = row1['nick'] if not row1['nick'] == 'None' else row1['name']
             await ctx.send('Points for {}: {}'.format(ctx.message.author.mention, str(points)))
-            cnx.close()
+            
         else:
-            await ctx.send('Ur not in database yet bitch, sorry havent implemented it ;-;')
-            cnx.close()
+            await ctx.send('Ur not in database yet bitch, sorry havent implemented it ;-; type .play to get points')
+            
+        cnx.commit()
+        cnx.close()
 
     @commands.command(aliases=['leaderboard'])
     async def display_leaderboard(self, ctx, arg1):

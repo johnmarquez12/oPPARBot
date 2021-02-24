@@ -83,15 +83,18 @@ class Gamble(commands.Cog):
             # print(user_points)
 
             randnum = randrange(2)
+            message = None
             if (randnum == 1):
                 user_points += user_points
+                message = f'Nice Cock!: {user_points} {ctx.message.author.mention}'
             else:
                 user_points -= user_points
                 user_points = 0 if user_points < 0 else user_points
+                message = '(╯°□°）╯︵ ┻━┻ Points: 0'
 
             query = SnowflakeQuery.update(self.points_table).set(self.points_table.points, user_points).where(self.points_table.id == str(user_id))
             cursor.execute(query.get_sql())
-            await ctx.send('New points {}'.format(user_points))
+            await ctx.send(message)
         else:    
             try:
                 gamble_amnt = abs(int(arg1))
@@ -101,7 +104,7 @@ class Gamble(commands.Cog):
                 row = cursor.fetchone()
                 # print(row)
                 user_points = int(row['points'])
-
+                message = None
                 print(user_points)
                 if gamble_amnt > user_points:
                     await ctx.send('u broke af lmao')
@@ -109,15 +112,16 @@ class Gamble(commands.Cog):
                     randnum = randrange(2)
                     if (randnum == 1):
                         user_points += gamble_amnt
+                        message = f'Nice Cock!: {user_points} {ctx.message.author.mention}'
                     else:
                         user_points -= gamble_amnt
                         user_points = 0 if user_points < 0 else user_points
-                    
+                        message = f'Nice Try Guy: {user_points} {ctx.message.author.mention}' if user_points >= 0 else '(╯°□°）╯︵ ┻━┻ Points: 0'
                     
                     query = SnowflakeQuery.update(self.points_table).set(self.points_table.points, user_points).where(self.points_table.id == str(user_id))
                     # print(query.get_sql())
                     cursor.execute(query.get_sql())
-                    await ctx.send('New points {}'.format(user_points))
+                    await ctx.send(message)
                         
             except ValueError:
                 await ctx.send('not an integer dipshit')

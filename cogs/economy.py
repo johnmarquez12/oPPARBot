@@ -4,6 +4,8 @@ from modules.mysql_wrapper import MySqlPoolWrapper
 from pypika import Query, Table, Field, Order
 from pypika.dialects import SnowflakeQuery
 import os
+import messages
+import constants
 
 class Economy(commands.Cog):
 
@@ -19,7 +21,7 @@ class Economy(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Economy online dfadsfadsf')
+        print('Economy online')
 
     @commands.command()
     async def economy_test(self, ctx):
@@ -49,11 +51,10 @@ class Economy(commands.Cog):
             row2 = cursor.fetchone()
             print(row2)
             points = row2['points']
-            # user_name = row1['nick'] if not row1['nick'] == 'None' else row1['name']
-            await ctx.send('Points for {}: {}'.format(ctx.message.author.mention, str(points)))
+            await ctx.send(messages.get_points_message(ctx.message.author, points))
             
         else:
-            await ctx.send('Ur not in database yet bitch, sorry havent implemented it ;-; type .play to get points')
+            await ctx.send(messages.GET_POINTS_ERROR)
             
         cnx.commit()
         cnx.close()
@@ -81,7 +82,7 @@ class Economy(commands.Cog):
             await ctx.send(embed=embed)
 
         except ValueError:
-            await ctx.send('not an integer dipshit')
+            await ctx.send(messages.INT_CONVERSION_ERROR_MESSAGE)
         
         cnx.close()
     
@@ -89,7 +90,7 @@ class Economy(commands.Cog):
     async def donate(self, ctx, user: discord.Member, arg1):
 
         if (ctx.message.author.id == user.id):
-            await ctx.send('why are you even trying lmao')
+            await ctx.send(messages.DONATE_TO_SELF_ERROR)
             return
 
         cnx = self.pool.get_connection()
@@ -112,18 +113,9 @@ class Economy(commands.Cog):
             cursor.execute(query.get_sql())
             donator = cursor.fetchone()
 
-            print(query.get_sql())
-            print(donator)
-            
-
             if (donatee != None):
                 donatee_id = donatee['id']
                 donator_id = donator['id']
-
-                # query = SnowflakeQuery.from_(self.points_table).select(self.points_table.star).where(self.points_table.id == str(id))
-                # donatee_row = cursor.execute(query.get_sql())
-
-                # donatee_points = donatee_row['points']
 
                 query = SnowflakeQuery.from_(self.points_table).select(self.points_table.star).where(self.points_table.id == str(donator_id))
                 print(query.get_sql())
@@ -133,10 +125,9 @@ class Economy(commands.Cog):
                 print(donator_row)
 
                 donator_points = donator_row['points']
-                
 
                 if (donation_amount > donator_points):
-                    await ctx.send('lmfao u cant even donate broke bitch')
+                    await ctx.send(messages.DONATE_BROKE_ERROR)
                 else:
                     query = SnowflakeQuery.update(self.points_table).set(self.points_table.points, self.points_table.points + donation_amount).where(self.points_table.id == donatee_id)
                     print(query.get_sql())
@@ -148,7 +139,7 @@ class Economy(commands.Cog):
 
                     await ctx.send(f'{ctx.message.author.mention} donated {donation_amount} to {user.mention} can we get a .poggers in the chat')
         except ValueError: 
-            await ctx.send('not an integer dipshit')
+            await ctx.send(messages.INT_CONVERSION_ERROR_MESSAGE)
         
         cnx.commit()
         cnx.close()
@@ -160,7 +151,7 @@ class Economy(commands.Cog):
         cnx = self.pool.get_connection()
 
         cursor = cnx.cursor()
-        query = SnowflakeQuery.update(self.points_table).set(self.points_table.points, self.points_table.points + 8)
+        query = SnowflakeQuery.update(self.points_table).set(self.points_table.points, self.points_table.points + constants.PERIODIC_POINTS_UPDATE)
         cursor.execute(query.get_sql())
         cnx.commit()
         cnx.close()
@@ -175,6 +166,10 @@ class Economy(commands.Cog):
     async def test_mention_user(self, ctx, user: discord.Member, arg1):
         print(f'{user.id} {arg1}')
         await ctx.send(user.mention)
+    
+    @commands.command(aliases=['unflip'])
+    async def unflip_table(self, ctx):
+        pass
 
 
 def setup(client):
